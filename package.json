@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts HistoricalClips out/historical-clips.mp4 --codec=h264",
-    "render:prores": "remotion render src/index.ts HistoricalClips out/historical-clips.mov --codec=prores",
+    "dev": "remotion studio src/index.tsx",
+    "render": "remotion render src/index.tsx HistoricalClips out/historical-clips.mp4 --codec=h264",
+    "render:prores": "remotion render src/index.tsx HistoricalClips out/historical-clips.mov --codec=prores",
+    "typecheck": "tsc --noEmit",
     "upgrade": "remotion upgrade"
   },
   "dependencies": {

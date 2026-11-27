@@ -1,81 +1,77 @@
 import React from 'react';
-import {Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig, interpolate, Easing} from 'remotion';
+import {Audio, Easing, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {Stickman, type CharacterAction, type Outfit, type PropKind} from './characters/Stickman';
+import {DesertBackdrop} from './scenes/DesertBackdrop';
 import type {Scene as SceneData} from './types';
-import {assetSrc} from './types';
 
-const NaskhText: React.FC<React.PropsWithChildren<{style?: React.CSSProperties}>> = ({children, style}) => (
-  <div dir="rtl" style={{fontFamily: 'Noto Naskh Arabic, NaskhLocal, serif', ...style}}>{children}</div>
+const ARABIC_FONT = 'Scheherazade New, Amiri, Noto Naskh Arabic, serif';
+
+const Arabic: React.FC<React.PropsWithChildren<{x: number; y: number; size: number; fill?: string; weight?: number; anchor?: 'start' | 'middle' | 'end'}>> = ({children, x, y, size, fill = '#fff8e9', weight = 600, anchor = 'end'}) => (
+  <text x={x} y={y} textAnchor={anchor} direction="rtl" unicodeBidi="plaintext" fontFamily={ARABIC_FONT} fontSize={size} fontWeight={weight} fill={fill}>{children}</text>
 );
 
-const AnimatedImage: React.FC<{src: string; panX?: number; panY?: number; salt?: number}> = ({src, panX = 0, panY = 0, salt = 0}) => {
-  const frame = useCurrentFrame();
-  const {durationInFrames} = useVideoConfig();
-  const progress = interpolate(frame, [0, Math.max(1, durationInFrames - 1)], [0, 1], {extrapolateRight: 'clamp', easing: Easing.inOut(Easing.quad)});
-  const scale = 1.04 + progress * 0.1;
-  const direction = salt % 2 === 0 ? 1 : -1;
-  return <Img src={staticFile(assetSrc(src))} style={{position: 'absolute', inset: '-6%', width: '112%', height: '112%', objectFit: 'cover', transform: `scale(${scale}) translate(${direction * (panX + progress * 1.8)}%, ${panY + progress * 1.4}%)`, filter: 'brightness(.78)'}} />;
+const SpeechBubble: React.FC<{text: string; speaker?: string; position?: 'left' | 'right'}> = ({text, speaker, position = 'right'}) => {
+  const x = position === 'left' ? 100 : 1120;
+  return <g transform={`translate(${x} 160)`}>
+    <path d="M0 0 Q0 -20 24 -20 H650 Q674 -20 674 4 V172 Q674 196 650 196 H88 L42 232 L51 196 H24 Q0 196 0 172 Z" fill="#fffaf0" stroke="#1c1713" strokeWidth="8" strokeLinejoin="round" />
+    {speaker && <Arabic x={625} y={32} size={29} fill="#9c5e25" weight={700}>{speaker}</Arabic>}
+    <foreignObject x="30" y={speaker ? 46 : 20} width="610" height="135"><div xmlns="http://www.w3.org/1999/xhtml" dir="rtl" style={{fontFamily: ARABIC_FONT, fontSize: 36, lineHeight: 1.45, color: '#211912', textAlign: 'right'}}>{text}</div></foreignObject>
+  </g>;
 };
 
-const HealthBar: React.FC<{label: string; value: number; color: string; align: 'left' | 'right'}> = ({label, value, color, align}) => {
-  const safeValue = Math.min(100, Math.max(0, value));
-  return (
-    <div style={{width: 390, direction: 'rtl', textAlign: align === 'left' ? 'right' : 'left'}}>
-      <NaskhText style={{fontSize: 26, color: 'white', fontWeight: 700, textShadow: '0 2px 6px #000'}}>{label}</NaskhText>
-      <div style={{height: 25, border: '3px solid #f4e7c2', background: '#20202a', borderRadius: 5, padding: 3, boxShadow: '0 3px 12px #0008'}}>
-        <div style={{height: '100%', width: `${safeValue}%`, background: `linear-gradient(180deg, ${color}, ${color}99)`, transition: 'width .2s', borderRadius: 2}} />
-      </div>
-    </div>
-  );
+const HealthBar: React.FC<{x: number; y: number; label: string; value: number; color: string; reverse?: boolean}> = ({x, y, label, value, color, reverse}) => {
+  const amount = Math.max(0, Math.min(100, value));
+  return <g transform={`translate(${x} ${y})`}>
+    <Arabic x={reverse ? 0 : 450} y={0} size={27}>{label}</Arabic>
+    <rect x="0" y="16" width="450" height="34" rx="8" fill="#211b18" stroke="#fff0cf" strokeWidth="5" />
+    <rect x={reverse ? 450 - amount * 4.3 : 7} y="23" width={Math.max(0, amount * 4.36)} height="20" rx="4" fill={color} />
+  </g>;
 };
 
-const Scene: React.FC<{scene: SceneData; sceneIndex: number; projectTitle?: string}> = ({scene, sceneIndex, projectTitle}) => {
+const DateCard: React.FC<{date: string; location: string; opacity: number}> = ({date, location, opacity}) => (
+  <g opacity={opacity}>
+    <rect x="570" y="330" width="780" height="340" rx="24" fill="#241b14" fillOpacity=".94" stroke="#e7bd70" strokeWidth="7" />
+    <Arabic x={960} y={465} size={76} fill="#f2d394" anchor="middle" weight={700}>{date}</Arabic>
+    <Arabic x={960} y={565} size={54} anchor="middle">{location}</Arabic>
+  </g>
+);
+
+export const HistoricalScene: React.FC<{scene: SceneData; sceneIndex: number; projectTitle?: string}> = ({scene, sceneIndex, projectTitle}) => {
   const frame = useCurrentFrame();
   const {fps, durationInFrames} = useVideoConfig();
-  const fadeFrames = Math.min(18, Math.floor(durationInFrames / 3));
-  const sceneFade = interpolate(frame, [0, Math.max(1, fadeFrames), Math.max(fadeFrames + 1, durationInFrames - fadeFrames), durationInFrames], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const locationStart = scene.dateCard ? Math.min(durationInFrames, Math.round((scene.dateCard.displayDurationInSeconds ?? 2.5) * fps)) : durationInFrames;
-  const locationOpacity = scene.dateCard ? interpolate(frame, [Math.max(0, locationStart - 12), locationStart + 12], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 0;
-  const cardOpacity = scene.dateCard ? interpolate(frame, [0, 10, Math.max(11, locationStart - 10), locationStart], [0, 1, 1, 0], {extrapolateRight: 'clamp'}) : 0;
-  const bubblePosition = scene.speechBubble?.position === 'left' ? {left: 80} : {right: 80};
+  const progress = interpolate(frame, [0, Math.max(1, durationInFrames - 1)], [0, 1], {extrapolateRight: 'clamp', easing: Easing.inOut(Easing.quad)});
+  const zoom = 1 + progress * 0.075;
+  const panX = (scene.pan?.x ?? (sceneIndex % 2 ? -14 : 14)) * progress;
+  const panY = (scene.pan?.y ?? 2) * progress;
+  const transitionFrames = Math.round((scene.dateCard?.displayDurationInSeconds ?? 2.5) * fps);
+  const dateOpacity = scene.dateCard ? interpolate(frame, [0, 10, Math.max(11, transitionFrames - 10), transitionFrames], [0, 1, 1, 0], {extrapolateRight: 'clamp'}) : 0;
+  const locationOpacity = scene.dateCard ? interpolate(frame, [Math.max(0, transitionFrames - 8), transitionFrames + 14], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 0;
+  const kind = scene.kind ?? (sceneIndex === 0 ? 'march' : 'celebration');
+  const defaults = kind === 'march'
+    ? [{x: 340, y: 860, scale: 1.15, outfit: 'traveler' as Outfit, hat: 'fedora' as const, action: 'walk' as CharacterAction, prop: 'bag' as PropKind}, {x: 850, y: 850, scale: 0.87, outfit: 'brown-coat' as Outfit, hat: 'fedora' as const, action: 'walk' as CharacterAction, prop: 'rifle' as PropKind}, {x: 1300, y: 860, scale: 0.78, outfit: 'soldier' as Outfit, hat: 'army' as const, action: 'walk' as CharacterAction, prop: 'flag' as PropKind}]
+    : [{x: 610, y: 875, scale: 1.35, outfit: 'gold' as Outfit, hat: 'fedora' as const, action: 'celebrate' as CharacterAction, prop: 'none' as PropKind}, {x: 1470, y: 875, scale: 1.28, outfit: 'formal' as Outfit, hat: 'fedora' as const, action: 'point' as CharacterAction, prop: 'none' as PropKind}];
+  const characters = scene.characters?.length ? scene.characters : defaults;
+  const bgTitle = scene.title || projectTitle || 'حكايات من التاريخ';
+  const audioPath = scene.narration?.replace(/^\/+/, '');
+  const dateCard = scene.dateCard;
 
-  return (
-    <div style={{position: 'absolute', inset: 0, overflow: 'hidden', backgroundColor: '#111', opacity: sceneFade}}>
-      <AnimatedImage src={scene.image} panX={scene.pan?.x} panY={scene.pan?.y} salt={sceneIndex} />
-      {scene.dateCard && (
-        <div style={{position: 'absolute', inset: 0, opacity: locationOpacity}}>
-          <AnimatedImage src={scene.dateCard.locationImage} panX={scene.pan?.x} panY={scene.pan?.y} salt={sceneIndex + 1} />
-          <div style={{position: 'absolute', inset: 0, background: 'linear-gradient(0deg, #0009, transparent 70%)'}} />
-          <NaskhText style={{position: 'absolute', bottom: 115, right: 100, color: 'white', fontSize: 54, fontWeight: 700, textShadow: '0 3px 12px #000'}}>{scene.dateCard.location}</NaskhText>
-        </div>
-      )}
-      {scene.dateCard && (
-        <div style={{position: 'absolute', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: cardOpacity}}>
-          <div style={{minWidth: 620, padding: '42px 72px', border: '2px solid #e8c879', background: 'linear-gradient(135deg, #111e, #332719eF)', borderRadius: 16, textAlign: 'center', boxShadow: '0 16px 55px #0009'}}>
-            <NaskhText style={{fontSize: 58, color: '#f5d992', fontWeight: 700}}>{scene.dateCard.date}</NaskhText>
-            <NaskhText style={{fontSize: 38, color: 'white', marginTop: 8}}>{scene.dateCard.location}</NaskhText>
-          </div>
-        </div>
-      )}
-      <div style={{position: 'absolute', inset: '0 0 auto', height: 100, display: 'flex', alignItems: 'center', padding: '0 70px', background: 'linear-gradient(90deg, #151722f2, #212333ec)', borderBottom: '3px solid #c9a85d', boxSizing: 'border-box'}}>
-        <NaskhText style={{fontSize: 39, color: '#fff3d4', fontWeight: 700, letterSpacing: '.2px'}}>{scene.title || projectTitle || 'حكايات من التاريخ'}</NaskhText>
-      </div>
-      {scene.speechBubble && (
-        <div style={{position: 'absolute', top: 150, ...bubblePosition, maxWidth: 620, padding: '24px 34px', borderRadius: 28, border: '3px solid #fff', background: '#fffffff0', boxShadow: '0 8px 26px #0007'}}>
-          {scene.speechBubble.speaker && <NaskhText style={{fontSize: 22, color: '#8b6422', fontWeight: 700, marginBottom: 4}}>{scene.speechBubble.speaker}</NaskhText>}
-          <NaskhText style={{fontSize: 31, lineHeight: 1.5, color: '#171717'}}>{scene.speechBubble.text}</NaskhText>
-        </div>
-      )}
-      {scene.healthBars && (
-        <div style={{position: 'absolute', left: 75, right: 75, bottom: 62, display: 'flex', justifyContent: 'space-between', alignItems: 'end'}}>
-          <HealthBar {...scene.healthBars.left} color={scene.healthBars.left.color || '#dc4242'} align="left" />
-          <HealthBar {...scene.healthBars.right} color={scene.healthBars.right.color || '#3f95e8'} align="right" />
-        </div>
-      )}
-      <Sequence durationInFrames={durationInFrames}>
-        <Audio src={staticFile(assetSrc(scene.narration))} />
-      </Sequence>
-    </div>
-  );
+  return <>
+    <svg viewBox="0 0 1920 1080" width="100%" height="100%" role="img" aria-label={bgTitle}>
+      <defs>
+        <linearGradient id={`sky-${sceneIndex}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#f5d9ad"/><stop offset=".58" stopColor="#e9b875"/><stop offset="1" stopColor="#bd8550"/></linearGradient>
+        <linearGradient id={`ground-${sceneIndex}`} x1="0" y1="0" x2="0" y2="1"><stop stopColor="#c99861"/><stop offset="1" stopColor="#795238"/></linearGradient>
+      </defs>
+      <g transform={`translate(${panX} ${panY}) translate(960 540) scale(${zoom}) translate(-960 -540)`}>
+        <DesertBackdrop variant={kind} progress={progress} />
+        {characters.map((character, i) => <Stickman key={i} x={character.x} y={character.y} scale={character.scale ?? 1} rotate={character.rotate ?? 0} outfit={character.outfit ?? 'formal'} hat={character.hat ?? 'fedora'} action={character.action ?? 'idle'} prop={character.prop ?? 'none'} flipX={character.flipX} frame={frame} />)}
+      </g>
+      <rect x="0" y="0" width="1920" height="112" fill="#1c1b20" fillOpacity=".94" />
+      <rect x="0" y="108" width="1920" height="5" fill="#d5ad68" />
+      <Arabic x={1835} y={75} size={43} fill="#fff1d2" weight={700}>{bgTitle}</Arabic>
+      {scene.speechBubble && <SpeechBubble text={scene.speechBubble.text} speaker={scene.speechBubble.speaker} position={scene.speechBubble.position} />}
+      {scene.healthBars && <g><HealthBar x={92} y={950} label={scene.healthBars.left.label} value={scene.healthBars.left.value} color={scene.healthBars.left.color ?? '#d84b43'} /><HealthBar x={1378} y={950} label={scene.healthBars.right.label} value={scene.healthBars.right.value} color={scene.healthBars.right.color ?? '#448fd1'} reverse /></g>}
+      {dateCard && <g><g opacity={locationOpacity}><DesertBackdrop variant="location" progress={progress} /><rect x="0" y="112" width="1920" height="968" fill="#241710" fillOpacity=".25"/><Arabic x={1710} y={910} size={64} fill="#fff1d2" weight={700}>{dateCard.location}</Arabic></g><DateCard date={dateCard.date} location={dateCard.location} opacity={dateOpacity} /></g>}
+    </svg>
+    {audioPath ? <Audio src={staticFile(audioPath.startsWith('audio/') ? audioPath : `audio/${audioPath}`)} /> : null}
+  </>;
 };
-
-export default Scene;

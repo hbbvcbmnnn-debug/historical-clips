@@ -1,63 +1,59 @@
 import React from 'react';
-import {useCurrentFrame, useVideoConfig, interpolate, spring} from 'remotion';
+
+export type CharacterAction = 'idle' | 'walk' | 'run' | 'celebrate' | 'present' | 'point';
+export type Outfit = 'formal' | 'brown-coat' | 'soldier' | 'traveler' | 'messenger' | 'gold';
+export type PropKind = 'bag' | 'letter' | 'rifle' | 'flag' | 'sword' | 'stick' | 'none';
+export type HatKind = 'fedora' | 'turban' | 'army' | 'none';
 
 export type CharacterProps = {
   x: number;
   y: number;
   scale?: number;
+  rotate?: number;
   flipX?: boolean;
-  outfit?: 'formal' | 'brown-coat' | 'soldier' | 'traveler' | 'messenger';
-  hat?: 'fedora' | 'turban' | 'army' | 'none';
-  action?: 'idle' | 'walk' | 'run' | 'celebrate' | 'present' | 'point';
+  outfit?: Outfit;
+  hat?: HatKind;
+  action?: CharacterAction;
+  prop?: PropKind;
   frame?: number;
-  prop?: 'bag' | 'letter' | 'rifle' | 'flag' | 'sword' | 'stick' | 'none';
 };
 
-export const palette = {
-  ink: '#16191E', face: '#FFFDF4', sand: '#CBA57A', sandLight: '#F2DAB4',
-  sandDark: '#8B684A', olive: '#59614B', navy: '#26364F', brown: '#4D3527',
-  gold: '#C9A85D', red: '#9E3F3F', sky: '#9BA9BD',
-};
+const ink = '#171513';
+const outfitColors: Record<Outfit, string> = {formal: '#26364f', 'brown-coat': '#49372b', soldier: '#59614b', traveler: '#6b5940', messenger: '#3e4650', gold: '#e69b24'};
 
-export const Stickman: React.FC<CharacterProps> = ({x, y, scale = 1, flipX = false, outfit = 'formal', hat = 'none', action = 'idle', frame: suppliedFrame, prop = 'none'}) => {
-  const currentFrame = useCurrentFrame();
-  const {fps} = useVideoConfig();
-  const frame = suppliedFrame ?? currentFrame;
-  const phase = frame % 30;
-  const breath = action === 'idle' ? Math.sin((phase / 30) * Math.PI * 2) * 3 : 0;
-  const walk = action === 'walk' ? Math.sin((phase / 30) * Math.PI * 2) * 18 : 0;
-  const runLift = action === 'run' ? Math.abs(Math.sin((phase / 30) * Math.PI * 2)) * 12 : 0;
-  const celebrate = action === 'celebrate' ? interpolate(phase, [0, 15, 30], [0, -30, 0], {extrapolateRight: 'clamp'}) : 0;
-  const outfitColor = outfit === 'soldier' ? palette.olive : outfit === 'traveler' ? palette.brown : outfit === 'messenger' ? palette.gold : palette.navy;
-  const legA = walk;
-  const legB = -walk;
-  const pointArm = action === 'point' || action === 'present';
+const Fedora: React.FC = () => <g stroke={ink} strokeWidth="7" strokeLinejoin="round"><path d="M-61 -169 Q-57 -223 0 -231 Q58 -223 62 -169 L77 -156 Q0 -143 -78 -156 Z" fill="#493324"/><path d="M-79 -158 Q0 -180 80 -158 Q83 -145 0 -143 Q-84 -145 -79 -158Z" fill="#241d19"/><path d="M-48 -190 Q0 -210 46 -190" fill="none" stroke="#bd8751" strokeWidth="5"/></g>;
+const Turban: React.FC = () => <g stroke={ink} strokeWidth="7" fill="#e9dfc9"><path d="M-63 -168 Q-73 -218 -28 -229 Q31 -245 62 -196 L68 -165 Q3 -143 -63 -168Z"/><path d="M-58 -190 Q0 -214 62 -186 M-62 -174 Q0 -195 67 -171" fill="none"/></g>;
 
-  return (
-    <g transform={`translate(${x} ${y}) scale(${flipX ? -scale : scale} ${scale})`}>
-      <ellipse cx="0" cy="128" rx="58" ry="12" fill="#000" opacity="0.18" />
-      <g transform={`translate(0 ${-runLift + breath})`}>
-        <g transform="translate(0 0)">
-          {hat === 'turban' && <><ellipse cx="0" cy="-40" rx="34" ry="12" fill="#EAD7A2" stroke={palette.ink} strokeWidth="7"/><path d="M-31 -40 Q0 -70 31 -40" fill="#F6EAC7" stroke={palette.ink} strokeWidth="7"/></>}
-          {hat === 'fedora' && <><ellipse cx="0" cy="-38" rx="48" ry="8" fill={palette.ink}/><path d="M-24 -38 Q-22 -74 0 -78 Q22 -74 24 -38Z" fill={palette.ink}/></>}
-          {hat === 'army' && <><ellipse cx="0" cy="-42" rx="48" ry="10" fill={palette.olive} stroke={palette.ink} strokeWidth="6"/><path d="M-25 -42 L-20 -72 L20 -72 L25 -42Z" fill={palette.olive} stroke={palette.ink} strokeWidth="6"/></>}
-        </g>
-        <ellipse cx="0" cy="-20" rx="38" ry="48" fill={palette.face} stroke={palette.ink} strokeWidth="8" />
-        <ellipse cx="-13" cy="-24" rx="5" ry="7" fill={palette.ink}/><ellipse cx="13" cy="-24" rx="5" ry="7" fill={palette.ink}/>
-        <path d="M-12 1 Q0 10 12 1" fill="none" stroke={palette.ink} strokeWidth="5" strokeLinecap="round" />
-        <path d="M-44 25 Q0 10 44 25 L38 96 Q0 112 -38 96Z" fill={outfitColor} stroke={palette.ink} strokeWidth="8" />
-        {outfit === 'formal' && <path d="M-5 26 L0 44 L7 26Z" fill={palette.red}/>} 
-        <path d="M-38 38 L-65 88 M38 38 L65 88" fill="none" stroke={palette.ink} strokeWidth="8" strokeLinecap="round" />
-        {pointArm && <path d="M38 38 L90 14" fill="none" stroke={palette.face} strokeWidth="18" strokeLinecap="round"/>}
-        {action === 'celebrate' && <><path d="M-38 38 L-58 0" fill="none" stroke={palette.face} strokeWidth="18" strokeLinecap="round"/><path d="M38 38 L58 0" fill="none" stroke={palette.face} strokeWidth="18" strokeLinecap="round"/></>}
-        <path d={`M-25 100 L${-25 + legA} 128 M25 100 L${25 + legB} 128`} fill="none" stroke={palette.ink} strokeWidth="9" strokeLinecap="round" />
-      </g>
-      {prop === 'bag' && <rect x="-88" y="35" rx="8" width="42" height="52" fill={palette.sandDark} stroke={palette.ink} strokeWidth="7"/>}
-      {prop === 'letter' && <g transform="translate(90 10)"><rect width="55" height="70" rx="4" fill="#FFF9E8" stroke={palette.ink} strokeWidth="7"/><path d="M10 20H45M10 35H45M10 50H32" stroke={palette.ink} strokeWidth="4"/></g>}
-      {prop === 'rifle' && <g transform="translate(82 48) rotate(-28)"><rect x="0" y="0" width="150" height="10" rx="5" fill={palette.ink}/><rect x="65" y="8" width="16" height="38" fill={palette.brown}/></g>}
-      {prop === 'flag' && <g><line x1="70" y1="-60" x2="70" y2="115" stroke={palette.ink} strokeWidth="8"/><path d="M70 -55 H145 V20 H70Z" fill={palette.red} stroke={palette.ink} strokeWidth="6"/></g>}
-      {prop === 'stick' && <line x1="75" y1="-40" x2="75" y2="128" stroke={palette.brown} strokeWidth="9"/>}
-      {prop === 'sword' && <g transform="rotate(-32 70 50)"><rect x="68" y="-30" width="8" height="120" rx="4" fill="#C8CDD3" stroke={palette.ink} strokeWidth="5"/><rect x="48" y="82" width="48" height="8" fill={palette.gold}/></g>}
+export const Stickman: React.FC<CharacterProps> = ({x, y, scale = 1, rotate = 0, flipX = false, outfit = 'formal', hat = 'fedora', action = 'idle', prop = 'none', frame = 0}) => {
+  const phase = (frame / 8) % (Math.PI * 2);
+  const walk = action === 'walk' || action === 'run';
+  const stride = walk ? Math.sin(phase) * (action === 'run' ? 24 : 15) : 0;
+  const lift = action === 'celebrate' ? -22 : action === 'run' ? -8 : 0;
+  const jacket = outfitColors[outfit];
+  const armRaise = action === 'celebrate' ? -70 : action === 'point' || action === 'present' ? -40 : Math.sin(phase) * (walk ? 16 : 2);
+  const legA = stride, legB = -stride;
+  const transform = `translate(${x} ${y}) rotate(${rotate}) scale(${flipX ? -scale : scale} ${scale})`;
+  return <g transform={transform} stroke={ink} strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
+    <ellipse cx="0" cy="4" rx="95" ry="17" fill="#241710" fillOpacity=".25" stroke="none" />
+    <g transform={`translate(0 ${lift})`}>
+      <path d={`M-25 -36 L-35 22 L-45 92 L${-43 + legA} 167`} fill="none" stroke={jacket} strokeWidth="22" />
+      <path d={`M24 -36 L35 22 L45 92 L${44 + legB} 167`} fill="none" stroke={jacket} strokeWidth="22" />
+      <path d={`M${-43 + legA} 167 l-30 7 q-12 8 0 15 h43 q10 -3 8 -13`} fill="#2a211d" />
+      <path d={`M${44 + legB} 167 l30 7 q12 8 0 15 h-43 q-10 -3 -8 -13`} fill="#2a211d" />
+      <path d="M-43 -112 Q-63 -98 -54 -40 L-44 20 Q0 37 44 20 L54 -40 Q63 -98 43 -112 Q0 -128 -43 -112Z" fill={jacket} />
+      <path d="M-22 -107 L0 -77 L22 -107 L12 -47 L0 -33 L-12 -47Z" fill="#fff8e9" strokeWidth="5" />
+      <path d="M0 -79 L-10 -59 L0 -35 L10 -59Z" fill="#a43d3c" strokeWidth="4" />
+      <path d={`M-45 -99 Q-77 -88 -80 -48 L-75 ${-15 + armRaise} Q-73 ${5 + armRaise} -60 ${5 + armRaise}`} fill="none" stroke={jacket} strokeWidth="19" />
+      <path d={`M45 -99 Q77 -88 80 -48 L75 ${-15 - armRaise / 3} Q73 ${5 - armRaise / 3} 60 ${5 - armRaise / 3}`} fill="none" stroke={jacket} strokeWidth="19" />
+      <circle cx="-60" cy={8 + armRaise} r="15" fill="#fffdf5" strokeWidth="6" />
+      <circle cx="60" cy={8 - armRaise / 3} r="15" fill="#fffdf5" strokeWidth="6" />
+      {prop === 'bag' && <g transform="translate(73 -46) rotate(12)"><rect x="0" y="0" width="36" height="64" rx="10" fill="#765033"/><path d="M4 13 Q18 -5 32 13" fill="none"/></g>}
+      {prop === 'letter' && <g transform="translate(54 -13)"><rect width="38" height="28" fill="#fff0cf"/><path d="M0 0 L19 15 L38 0" fill="none" strokeWidth="4"/></g>}
+      {prop === 'rifle' && <path d="M-95 7 L-95 -130 L-88 -151 L-81 -130 L-81 8" fill="#392a20" strokeWidth="6"/>}
+      {prop === 'flag' && <g transform="translate(88 -205)"><path d="M0 0 V185"/><path d="M0 8 Q45 -6 77 13 V60 Q40 43 0 58Z" fill="#a34336" strokeWidth="5"/></g>}
+      {prop === 'sword' && <path d="M-94 15 L-133 -80 L-120 -88 L-75 7 M-103 -10 L-67 -24" fill="#d5d0c4" strokeWidth="6"/>}
+      {prop === 'stick' && <path d="M-82 5 L-107 -80" fill="none" stroke="#67462d" strokeWidth="9"/>}
+      <g transform="translate(0 -151)"><ellipse cx="0" cy="0" rx="58" ry="69" fill="#fffdf7" strokeWidth="9"/><ellipse cx="-19" cy="-2" rx="6" ry="18" fill={ink} stroke="none"/><ellipse cx="19" cy="-2" rx="6" ry="18" fill={ink} stroke="none"/>{hat === 'fedora' && <Fedora/>}{hat === 'turban' && <Turban/>}{hat === 'army' && <g strokeWidth="7"><path d="M-61 -163 Q-44 -217 0 -219 Q44 -217 61 -163Z" fill="#536047"/><path d="M-71 -162 Q0 -179 71 -162" fill="#3e4737"/></g>}</g>
     </g>
-  );
+  </g>;
 };

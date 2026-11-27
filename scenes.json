@@ -6,31 +6,26 @@
   "defaultSceneDurationInSeconds": 8,
   "scenes": [
     {
-      "title": "رحلة عبر التاريخ",
-      "image": "images/scene-01.jpg",
-      "narration": "audio/narration-01.mp3",
+      "title": "رحلة عبر الصحراء",
+      "kind": "march",
       "durationInSeconds": 8,
-      "speechBubble": {
-        "text": "هنا بدأت الحكاية...",
-        "speaker": "الراوي",
-        "position": "right"
-      },
+      "speechBubble": {"text": "هنا بدأت الحكاية...", "speaker": "الراوي", "position": "right"},
       "healthBars": {
-        "left": {"label": "الجيش الأول", "value": 82, "color": "#e34b4b"},
-        "right": {"label": "الجيش الثاني", "value": 64, "color": "#42a5f5"}
+        "left": {"label": "الجيش الأول", "value": 82, "color": "#d84b43"},
+        "right": {"label": "الجيش الثاني", "value": 64, "color": "#448fd1"}
       }
     },
     {
-      "title": "محطة تاريخية",
-      "image": "images/scene-02.jpg",
-      "narration": "audio/narration-02.mp3",
+      "title": "لقاء عند أسوار بغداد",
+      "kind": "celebration",
       "durationInSeconds": 9,
-      "dateCard": {
-        "date": "عام ١٢٥٨م",
-        "location": "بغداد",
-        "locationImage": "images/baghdad.jpg",
-        "displayDurationInSeconds": 2.5
-      }
+      "dateCard": {"date": "عام ١٢٥٨م", "location": "بغداد", "displayDurationInSeconds": 2.5},
+      "characters": [
+        {"x": 610, "y": 875, "scale": 1.35, "outfit": "gold", "hat": "fedora", "action": "celebrate", "prop": "none"},
+        {"x": 1470, "y": 875, "scale": 1.28, "outfit": "formal", "hat": "fedora", "action": "point", "prop": "none"},
+        {"x": 250, "y": 900, "scale": 0.64, "outfit": "brown-coat", "hat": "fedora", "action": "celebrate", "prop": "flag"},
+        {"x": 1730, "y": 900, "scale": 0.62, "outfit": "soldier", "hat": "army", "action": "celebrate", "prop": "flag", "flipX": true}
+      ]
     }
   ]
 }
