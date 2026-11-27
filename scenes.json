@@ -1,0 +1,36 @@
+{
+  "title": "حكايات من التاريخ",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "defaultSceneDurationInSeconds": 8,
+  "scenes": [
+    {
+      "title": "رحلة عبر التاريخ",
+      "image": "images/scene-01.jpg",
+      "narration": "audio/narration-01.mp3",
+      "durationInSeconds": 8,
+      "speechBubble": {
+        "text": "هنا بدأت الحكاية...",
+        "speaker": "الراوي",
+        "position": "right"
+      },
+      "healthBars": {
+        "left": {"label": "الجيش الأول", "value": 82, "color": "#e34b4b"},
+        "right": {"label": "الجيش الثاني", "value": 64, "color": "#42a5f5"}
+      }
+    },
+    {
+      "title": "محطة تاريخية",
+      "image": "images/scene-02.jpg",
+      "narration": "audio/narration-02.mp3",
+      "durationInSeconds": 9,
+      "dateCard": {
+        "date": "عام ١٢٥٨م",
+        "location": "بغداد",
+        "locationImage": "images/baghdad.jpg",
+        "displayDurationInSeconds": 2.5
+      }
+    }
+  ]
+}
